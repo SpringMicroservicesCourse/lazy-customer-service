@@ -1,221 +1,509 @@
-# Lazy Customer Service 🛋️
+# lazy-customer-service
 
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+> Event-driven customer service with Spring Cloud Stream and RabbitMQ routing key-based message delivery
+
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Spring Cloud Stream](https://img.shields.io/badge/Spring%20Cloud%20Stream-3.2.0-blue.svg)](https://spring.io/projects/spring-cloud-stream)
-[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.11.0-orange.svg)](https://www.rabbitmq.com/)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
+[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2024.0.2-blue.svg)](https://spring.io/projects/spring-cloud)
+[![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.11-orange.svg)](https://www.rabbitmq.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## 專案介紹
+A comprehensive demonstration of **event-driven microservices** using Spring Cloud Stream, featuring routing key-based message delivery, multi-instance deployment with precise message routing, Feign client service invocation, and Resilience4j circuit breaker protection.
 
-Lazy Customer Service 是一個採用事件驅動架構的客戶服務微服務，專為追求高效能和非阻塞式處理的場景設計。與傳統的輪詢方式不同，此服務採用消息驅動模式，當訂單完成時會主動收到通知，無需定期查詢訂單狀態。
+## Features
 
-### 核心功能
-- 建立和管理咖啡訂單
-- 接收來自 Waiter Service 的訂單完成通知
-- 自動更新訂單狀態為已取餐（TAKEN）
-- 支援多實例部署，每個實例獨立處理自己的訂單
+- Spring Cloud Stream function-based messaging model
+- RabbitMQ routing key-based message delivery
+- Multi-instance deployment with isolated message consumption
+- Feign declarative HTTP client for service invocation
+- Resilience4j circuit breaker and bulkhead protection
+- Consul service discovery and registration
+- Dynamic customer naming based on server port
+- Order state management (INIT → PAID → BREWED → TAKEN)
+- Apache HttpClient 5 with connection pooling
+- Joda Money for precise monetary calculations
+- Vavr functional programming utilities
 
-> 💡 **為什麼選擇此服務？**
-> - 採用事件驅動架構，響應速度更快
-> - 減少不必要的網路請求，節省系統資源
-> - 支援水平擴展，可同時運行多個實例
-> - 基於路由鍵的精確消息分發機制
+## Tech Stack
 
-### 🎯 專案特色
+- Spring Boot 3.4.5
+- Spring Cloud Stream 4.x
+- Spring Cloud OpenFeign
+- RabbitMQ 3.11+
+- Consul 1.4.5
+- Resilience4j Spring Boot 3
+- Java 21
+- Joda Money 2.0.2
+- Vavr 0.10.4
+- AspectJ Weaver
+- Apache HttpClient 5
+- Lombok
+- Maven 3.8+
 
-- **事件驅動**：基於消息通知而非輪詢機制
-- **精確路由**：使用客戶名稱作為路由鍵，確保消息精確送達
-- **水平擴展**：支援多實例部署，每個實例處理特定客戶群
-- **容錯設計**：內建 Resilience4j 熔斷器機制
+## Getting Started
 
-## 技術棧
+### Prerequisites
 
-### 核心框架
-- **Spring Boot 3.4.5** - 微服務基礎框架
-- **Spring Cloud Stream 4.x** - 消息驅動微服務框架
-- **Spring Cloud OpenFeign** - 服務間 HTTP 通信
-- **Resilience4j** - 熔斷器、限流和重試機制
+- JDK 21 or higher
+- Maven 3.8+ (or use included Maven Wrapper)
+- **RabbitMQ 3.11+** running on localhost:5672
+- **Consul 1.4.5+** running on localhost:8500
+- **busy-waiter-service** running (dependency service)
+- **rabbitmq-barista-service** running (for complete workflow)
 
-### 開發工具與輔助
-- **Maven** - 專案建構與依賴管理
-- **Lombok** - 減少樣板代碼
-- **Consul** - 服務註冊與發現
-- **RabbitMQ** - 消息代理中間件
+### Quick Start
 
-## 專案結構
+**Step 1: Start RabbitMQ**
 
-```
-lazy-customer-service/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── tw/fengqing/spring/springbucks/customer/
-│   │   │       ├── integration/          # 消息整合層
-│   │   │       │   ├── NotificationListener.java # 訂單通知監聽器
-│   │   │       │   └── Waiter.java          # Waiter 服務介面定義
-│   │   │       ├── controller/           # REST API 控制器
-│   │   │       │   └── CustomerController.java # 客戶控制器
-│   │   │       ├── model/                # 資料模型
-│   │   │       │   ├── Coffee.java           # 咖啡實體
-│   │   │       │   ├── CoffeeOrder.java      # 訂單實體
-│   │   │       │   ├── OrderState.java       # 訂單狀態枚舉
-│   │   │       │   ├── NewOrderRequest.java  # 新訂單請求
-│   │   │       │   └── OrderStateRequest.java # 訂單狀態更新請求
-│   │   │       ├── service/              # 業務邏輯層
-│   │   │       │   ├── CoffeeOrderService.java # 訂單服務
-│   │   │       │   └── WaiterService.java    # Waiter 服務代理
-│   │   │       └── CustomerServiceApplication.java # 應用程式啟動類
-│   │   └── resources/
-│   │       └── application.properties    # 應用程式配置
-│   └── test/                            # 測試程式碼
-├── pom.xml                              # Maven 專案配置
-└── README.md                            # 專案說明文件
-```
-
-## 快速開始
-
-### 前置需求
-- Java 21 或更高版本
-- Maven 3.6 或更高版本
-- RabbitMQ 3.11.0 或更高版本
-- Consul（服務註冊與發現）
-- Busy Waiter Service（依賴服務）
-
-### 安裝與執行
-
-1. **克隆此倉庫：**
 ```bash
-git clone <repository-url>
-cd lazy-customer-service
+# Using Docker (recommended)
+docker run -d --name rabbitmq \
+  -p 5672:5672 \
+  -p 15672:15672 \
+  -e RABBITMQ_DEFAULT_USER=spring \
+  -e RABBITMQ_DEFAULT_PASS=spring \
+  rabbitmq:3.11-management
+
+# Verify RabbitMQ is running
+curl http://localhost:15672
+# Login: spring / spring
 ```
 
-2. **啟動依賴服務：**
+**Step 2: Start Consul**
+
 ```bash
-# 啟動 RabbitMQ
-docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.11-management
+# Using Docker (recommended)
+docker run -d --name consul \
+  -p 8500:8500 \
+  -p 8600:8600/udp \
+  consul:1.4.5
 
-# 啟動 Consul
-consul agent -dev
+# Verify Consul is running
+curl http://localhost:8500/v1/status/leader
+# Expected: "127.0.0.1:8300"
+```
 
-# 啟動 Busy Waiter Service
+**Step 3: Start MariaDB**
+
+```bash
+docker run -d --name mariadb \
+  -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=springbucks \
+  -e MYSQL_USER=springbucks \
+  -e MYSQL_PASSWORD=springbucks \
+  mariadb:10.6
+
+# Verify MariaDB is running
+docker exec -it mariadb mysql -uspringbucks -pspringbucks -e "SELECT 1"
+```
+
+**Step 4: Start rabbitmq-barista-service**
+
+```bash
+# In rabbitmq-barista-service directory
+cd ../rabbitmq-barista-service
+./mvnw spring-boot:run
+```
+
+**Step 5: Start busy-waiter-service**
+
+```bash
+# In busy-waiter-service directory
 cd ../busy-waiter-service
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-3. **編譯專案：**
+**Step 6: Run lazy-customer-service (Single Instance)**
+
 ```bash
-mvn clean compile
+# Method 1: Using Maven Wrapper
+./mvnw spring-boot:run
+
+# Method 2: Using Maven with specific port
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+
+# Method 3: Using JAR
+./mvnw clean package -DskipTests
+java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8090
 ```
 
-4. **執行應用程式：**
+**Step 7: Run Multiple Instances (Multi-Instance Test)**
+
 ```bash
-# 單一實例執行
-mvn spring-boot:run
+# Terminal 1: Start customer instance 1 (port 8090)
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
 
-# 多實例執行（用於測試消息路由）
-# 終端1：啟動客戶端1（端口8090）
-mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
-
-# 終端2：啟動客戶端2（端口8091）
-mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
-
-# 或使用 JAR 方式執行
-# java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8090
-# java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8091
+# Terminal 2: Start customer instance 2 (port 8091)
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
 ```
 
-## 進階說明
+**Step 8: Verify Service**
 
-### 環境變數
-```properties
-# 服務端口設定（0 表示隨機分配）
-SERVER_PORT=0
+```bash
+# Health check
+curl http://localhost:8090/actuator/health
 
-# 客戶名稱設定（基於服務端口）
-CUSTOMER_NAME=spring-${server.port}
+# Check Consul service registration
+curl -s http://localhost:8500/v1/catalog/service/customer-service | jq '.[] | {ID: .ServiceID, Port: .ServicePort}'
 
-# RabbitMQ 連線設定
-SPRING_RABBITMQ_HOST=localhost
-SPRING_RABBITMQ_PORT=5672
-SPRING_RABBITMQ_USERNAME=spring
-SPRING_RABBITMQ_PASSWORD=spring
-
-# Consul 服務註冊設定
-SPRING_CLOUD_CONSUL_HOST=localhost
-SPRING_CLOUD_CONSUL_PORT=8500
+# Expected output:
+# { "ID": "customer-service-8090", "Port": 8090 }
+# { "ID": "customer-service-8091", "Port": 8091 }
 ```
 
-### 設定檔說明
+## Configuration
+
+### Application Properties
+
 ```properties
-# application.properties 主要設定
-# 動態端口分配
+# Server configuration (dynamic port allocation)
 server.port=0
 
-# 客戶名稱（用於消息路由）
+# Customer name configuration (includes port number for uniqueness)
+# - Instance 1: spring-8090
+# - Instance 2: spring-8091
 customer.name=spring-${server.port}
 
-# Spring Cloud Stream 函數式編程模型配置
+# RabbitMQ connection configuration
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=spring
+spring.rabbitmq.password=spring
+
+# Spring Cloud Stream function definition
+# Define consumer function: notifyOrders (receive order completion notification)
 spring.cloud.function.definition=notifyOrders
 
-# RabbitMQ 輸入綁定配置 - 接收訂單完成通知
+# Input binding configuration - receive order completion notification
 spring.cloud.stream.bindings.notifyOrders-in-0.destination=notifyOrders
+# Group name includes port number to ensure each instance has independent queue
 spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service-${server.port}
+# Key configuration: bind routing key to customer name, only receive messages for this customer
 spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.binding-routing-key=${customer.name}
 spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.durable-subscription=true
+```
 
-# Resilience4j 熔斷器配置
+**Configuration Explanation:**
+
+| Property | Value | Purpose |
+|----------|-------|---------|
+| `customer.name` | `spring-${server.port}` | Dynamic customer name for routing |
+| `binding-routing-key` | `${customer.name}` | Bind specific routing key for precise delivery |
+| `group` | `customer-service-${server.port}` | Ensure instance isolation |
+| `durable-subscription` | `true` | Persistent subscription to avoid message loss |
+
+### Bootstrap Properties
+
+```properties
+# Application name
+spring.application.name=customer-service
+
+# Consul service discovery
+spring.cloud.consul.host=localhost
+spring.cloud.consul.port=8500
+spring.cloud.consul.discovery.prefer-ip-address=true
+
+# Feign configuration
+spring.cloud.openfeign.client.config.default.connect-timeout=5000
+spring.cloud.openfeign.client.config.default.read-timeout=5000
+
+# Resilience4j circuit breaker configuration
 resilience4j.circuitbreaker.instances.order.failure-rate-threshold=50
 resilience4j.circuitbreaker.instances.order.wait-duration-in-open-state=5000
-resilience4j.circuitbreaker.instances.order.ring-buffer-size-in-closed-state=5
+resilience4j.circuitbreaker.instances.order.sliding-window-size=10
+
+# Resilience4j bulkhead configuration
+resilience4j.bulkhead.instances.order.max-concurrent-calls=5
+resilience4j.bulkhead.instances.order.max-wait-duration=1000
 ```
 
-### 消息路由機制
+## Message Routing Mechanism
 
-```mermaid
-graph TD
-    A[Customer Service] -->|下單| B[Waiter Service]
-    B -->|發送新訂單| C[RabbitMQ newOrders Exchange]
-    C -->|消息路由| D[Barista Service]
-    D -->|訂單完成通知| E[RabbitMQ finishedOrders Exchange]
-    E -->|消息路由| B
-    B -->|發送通知消息| F[RabbitMQ notifyOrders Exchange]
-    F -->|路由鍵: spring-8090| G[Customer Service 8090]
-    F -->|路由鍵: spring-8091| H[Customer Service 8091]
-    G -->|處理訂單| I[訂單狀態更新為 TAKEN]
-    H -->|處理訂單| J[訂單狀態更新為 TAKEN]
+### RabbitMQ Exchange Architecture
+
+| Exchange Name | Type | Purpose | Routing Key | Participating Services |
+|---------------|------|---------|-------------|------------------------|
+| `newOrders` | Direct | New order notification | Default | Waiter Service → Barista Service |
+| `finishedOrders` | Direct | Order completion notification | Default | Barista Service → Waiter Service |
+| `notifyOrders` | Direct | Customer notification | Customer name (e.g., spring-8090) | Waiter Service → Customer Service |
+
+### Message Flow
+
+```
+1. Customer Service (8090) creates order via Feign → Waiter Service
+   ↓
+2. Waiter Service updates order state to PAID, sends message to newOrders Exchange
+   ↓
+3. Barista Service receives order ID from newOrders
+   ↓
+4. Barista Service processes coffee (5 seconds), updates state to BREWED
+   ↓
+5. Barista Service sends completion notification to finishedOrders Exchange
+   ↓
+6. Waiter Service receives completion notification from finishedOrders
+   ↓
+7. Waiter Service sends message to notifyOrders Exchange with customer name as Header
+   ↓
+8. RabbitMQ routes message to corresponding customer queue based on routing key
+   ↓
+9. Customer Service (8090) receives notification (only messages with routing key "spring-8090")
+   ↓
+10. Customer Service updates order state to TAKEN, workflow complete
 ```
 
-### RabbitMQ Exchange 說明
+### Multi-Instance Routing
 
-| Exchange 名稱 | 用途 | 路由方式 | 參與服務 |
-|---------------|------|----------|----------|
-| `newOrders` | 新訂單通知 | Direct | Waiter Service → Barista Service |
-| `finishedOrders` | 訂單完成通知 | Direct | Barista Service → Waiter Service |
-| `notifyOrders` | 客戶通知 | Direct (基於路由鍵) | Waiter Service → Customer Service |
+**Scenario: 2 customer instances running**
 
-### API 端點
+```
+┌─────────────────────┐         ┌─────────────────────┐
+│ Customer (8090)     │         │ Customer (8091)     │
+│ Routing Key:        │         │ Routing Key:        │
+│   spring-8090       │         │   spring-8091       │
+└──────────┬──────────┘         └──────────┬──────────┘
+           │                               │
+           └───────────┐       ┌───────────┘
+                       │       │
+            ┌──────────▼───────▼──────────┐
+            │  notifyOrders Exchange       │
+            │  (Direct type)               │
+            └──────────┬───────┬──────────┘
+                       │       │
+         Routing Key:  │       │  Routing Key:
+         spring-8090   │       │  spring-8091
+                       │       │
+        ┌──────────────▼───┐ ┌─▼──────────────┐
+        │ Queue:           │ │ Queue:          │
+        │ notifyOrders.    │ │ notifyOrders.   │
+        │ customer-        │ │ customer-       │
+        │ service-8090     │ │ service-8091    │
+        └──────────────────┘ └─────────────────┘
+             ↓                      ↓
+        Instance 8090          Instance 8091
+        receives only          receives only
+        order 1 messages       order 2 messages
+```
 
-| 方法 | 路徑 | 描述 |
-|------|------|------|
-| POST | `/customer/order` | 建立新訂單 |
-| GET | `/customer/orders` | 取得所有訂單列表 |
-| GET | `/customer/orders/{id}` | 取得特定訂單詳情 |
+**Key Benefits:**
+- ✅ Precise message delivery (no broadcast)
+- ✅ Instance isolation
+- ✅ Horizontal scaling support
+- ✅ Independent queue per instance
 
-## 開發指南
+## API Endpoints
 
-### 重要程式碼區塊註解
+### Customer Operations
 
-#### NotificationListener.java - 訂單通知監聽器
+| Method | Endpoint | Description | Request Body |
+|--------|----------|-------------|--------------|
+| POST | `/customer/order` | Create new order | - (auto-creates capuccino order) |
+
+**Examples:**
+
+```bash
+# Create order (instance 8090)
+curl -X POST http://localhost:8090/customer/order
+
+# Expected output:
+# {
+#   "id": 1,
+#   "customer": "spring-8090",
+#   "items": [
+#     {
+#       "id": 3,
+#       "name": "capuccino",
+#       "price": 125.00,
+#       ...
+#     }
+#   ],
+#   "state": "PAID",
+#   "discount": 95,
+#   "total": 118.75,
+#   "waiter": "springbucks-uuid"
+# }
+```
+
+```bash
+# Create order (instance 8091)
+curl -X POST http://localhost:8091/customer/order
+
+# Expected output:
+# {
+#   "id": 2,
+#   "customer": "spring-8091",  ← Different customer name
+#   ...
+# }
+```
+
+### Actuator Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/actuator/health` | Health check status |
+| `/actuator/circuitbreakers` | Circuit breaker status |
+| `/actuator/bulkheads` | Bulkhead status |
+| `/actuator/metrics` | Application metrics |
+| `/actuator/bindings` | Stream bindings information |
+
+**Examples:**
+
+```bash
+# Health check
+curl http://localhost:8090/actuator/health | jq
+
+# Check circuit breaker status
+curl http://localhost:8090/actuator/circuitbreakers | jq
+
+# View stream bindings
+curl http://localhost:8090/actuator/bindings | jq
+```
+
+## Multi-Instance Testing
+
+### Test Routing Key Precision
+
+**Step 1: Start Multiple Instances**
+
+```bash
+# Terminal 1
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+
+# Terminal 2
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
+```
+
+**Step 2: Create Orders from Different Instances**
+
+```bash
+# Create order from instance 8090
+curl -X POST http://localhost:8090/customer/order
+
+# Create order from instance 8091
+curl -X POST http://localhost:8091/customer/order
+```
+
+**Step 3: Observe Logs**
+
+**Instance 8090 Log:**
+```log
+2025-10-21T13:53:52.825  INFO [nio-8090-exec-2] CustomerController  : Create order: 1
+2025-10-21T13:53:52.893  INFO [nio-8090-exec-2] CustomerController  : Order is PAID: ...customer=spring-8090...
+2025-10-21T13:53:53.046  INFO [-service-8090-1] NotificationListener : Order 1 is READY, I'll take it.
+                                   ↑ Message listener thread receives order 1 notification
+```
+
+**Instance 8091 Log:**
+```log
+2025-10-21T13:57:08.407  INFO [nio-8091-exec-2] CustomerController  : Create order: 2
+2025-10-21T13:57:08.424  INFO [nio-8091-exec-2] CustomerController  : Order is PAID: ...customer=spring-8091...
+2025-10-21T13:57:08.472  INFO [-service-8091-1] NotificationListener : Order 2 is READY, I'll take it.
+                                   ↑ Message listener thread receives order 2 notification
+```
+
+**Expected Results:**
+- ✅ Order 1 notification only received by 8090 instance
+- ✅ Order 2 notification only received by 8091 instance
+- ✅ Two instances do not interfere with each other
+- ✅ Precise routing based on customer name
+
+**Step 4: Verify RabbitMQ Queues**
+
+```bash
+# Open RabbitMQ Management Console
+open http://localhost:15672
+# Login: spring / spring
+
+# Query queues via API
+curl -u spring:spring http://localhost:15672/api/queues | jq '.[] | select(.name | contains("notifyOrders"))'
+
+# Expected queues:
+# - notifyOrders.customer-service-8090
+# - notifyOrders.customer-service-8091
+```
+
+## Startup Logs
+
+### Bootstrap Phase
+
+```log
+# 1. Bootstrap: Application initialization
+2025-10-21T13:53:11.986+08:00  INFO [main] CustomerServiceApplication : No active profile set, falling back to 1 default profile: "default"
+
+# 2. Spring Cloud Stream: Create message channels
+2025-10-21T13:53:12.522+08:00  INFO [main] faultConfiguringBeanFactoryPostProcessor : No bean named 'errorChannel' has been explicitly defined. Therefore, a default PublishSubscribeChannel will be created.
+
+# 3. GenericScope: Support dynamic bean refresh
+2025-10-21T13:53:12.618+08:00  INFO [main] GenericScope : BeanFactory id=1a0a246e-9f76-3f98-8da7-2fa149baec8a
+
+# 4. Tomcat: Initialize with port 8090
+2025-10-21T13:53:13.085+08:00  INFO [main] TomcatWebServer : Tomcat initialized with port 8090 (http)
+
+# 5. Feign: Create client for waiter-service
+2025-10-21T13:53:13.892+08:00  INFO [main] FeignClientFactoryBean : For 'waiter-service' URL not provided. Will try picking an instance via load-balancing.
+
+# 6. Spring Cloud Stream: Subscribe to notifyOrders channel
+2025-10-21T13:53:14.951+08:00  INFO [main] DirectWithAttributesChannel : Channel 'customer-service-1.notifyOrders-in-0' has 1 subscriber(s).
+
+# 7. RabbitMQ: Declare queue with routing key
+2025-10-21T13:53:15.574+08:00  INFO [main] RabbitExchangeQueueProvisioner : declaring queue for inbound: notifyOrders.customer-service-8090, bound to: notifyOrders
+
+# 8. RabbitMQ: Connect to broker
+2025-10-21T13:53:15.605+08:00  INFO [main] CachingConnectionFactory : Created new connection: rabbitConnectionFactory#4b024fb2:0/SimpleConnection@566c6b91 [delegate=amqp://spring@127.0.0.1:5672/, localPort=65475]
+
+# 9. Spring Cloud Stream: Start message listener
+2025-10-21T13:53:15.656+08:00  INFO [main] AmqpInboundChannelAdapter : started bean 'inbound.notifyOrders.customer-service-8090'
+
+# 10. Consul: Service registration
+2025-10-21T13:53:15.666+08:00  INFO [main] ConsulServiceRegistry : Registering service with consul: NewService{id='customer-service-8090', name='customer-service', ...port=8090...}
+
+# 11. Application startup completed
+2025-10-21T13:53:15.744+08:00  INFO [main] CustomerServiceApplication : Started CustomerServiceApplication in 4.173 seconds (process running for 4.422)
+```
+
+**Log Analysis:**
+
+| Step | Event | Details |
+|------|-------|---------|
+| **1** | Profile selection | Using default profile |
+| **4** | Tomcat port | Port 8090 assigned |
+| **5** | Feign client | Discover waiter-service via load balancing |
+| **7** | Queue declaration | `notifyOrders.customer-service-8090` bound to routing key `spring-8090` |
+| **8** | RabbitMQ connection | Connected to localhost:5672 |
+| **10** | Consul registration | Service ID: `customer-service-8090`, Port: 8090 |
+| **11** | Startup time | **4.173 seconds** total |
+
+### Order Processing Logs
+
+```log
+# 1. HTTP Request: Create order
+2025-10-21T13:53:52.825  INFO [nio-8090-exec-2] CustomerController : Create order: 1
+
+# 2. HTTP Request: Order paid
+2025-10-21T13:53:52.893  INFO [nio-8090-exec-2] CustomerController : Order is PAID: CoffeeOrder(id=1, customer=spring-8090, ...)
+
+# 3. Message Listener: Receive order completion notification (different thread)
+2025-10-21T13:53:53.046  INFO [-service-8090-1] NotificationListener : Order 1 is READY, I'll take it.
+                                   ↑ Message listener thread (async)
+```
+
+**Thread Analysis:**
+
+| Thread Name | Type | Purpose |
+|-------------|------|---------|
+| `nio-8090-exec-2` | HTTP request thread | Handle REST API requests |
+| `-service-8090-1` | Message listener thread | Handle RabbitMQ messages |
+
+**Key Observation:** HTTP processing and message listening run in **separate threads**, demonstrating asynchronous event-driven architecture.
+
+## Key Components
+
+### NotificationListener (Message Consumer)
+
 ```java
-/**
- * 訂單完成通知監聽器
- * 採用函數式編程模型，監聽來自 Waiter Service 的訂單完成通知
- * 當收到通知時，自動將訂單狀態更新為已取餐（TAKEN）
- */
 @Component
 @Slf4j
 public class NotificationListener {
-    
     @Autowired
     private CoffeeOrderService orderService;
     
@@ -223,48 +511,55 @@ public class NotificationListener {
     private String customer;
 
     /**
-     * 訂單通知處理函數
-     * 使用函數式編程模型定義消息處理邏輯
-     * @return Consumer<Long> 訂單ID處理函數
+     * Order completion notification listener
+     * Uses function-based programming model
+     * Only receives messages matching this customer's routing key
+     * 
+     * @return Consumer<Long> Order ID processing function
      */
     @Bean
     public Consumer<Long> notifyOrders() {
         return id -> {
-            log.info("=== 收到訂單通知 ===");
-            log.info("訂單ID: {}", id);
-            log.info("當前客戶名稱: {}", customer);
+            log.info("Order [{}] is finished.", id);
             
-            // 取得訂單詳情
+            // Query order details via Feign
             CoffeeOrder order = orderService.getOrder(id);
-            log.info("訂單詳情: {}", order);
+            log.info("Get Order: {}", order);
             
-            // 檢查訂單狀態是否為製作完成
-            if (order != null && OrderState.BREWED == order.getState()) {
-                log.info("Order {} is READY, I'll take it.", id);
-                // 更新訂單狀態為已取餐
-                orderService.updateState(id,
-                        OrderStateRequest.builder().state(OrderState.TAKEN).build());
+            // Verify order state is BREWED (coffee completed)
+            if (order != null && order.getState() == OrderState.BREWED) {
+                log.info("Order [{}] is BREWED, I will take it.", id);
+                
+                // Update order state to TAKEN (picked up)
+                OrderStateRequest request = OrderStateRequest.builder()
+                        .state(OrderState.TAKEN)
+                        .build();
+                orderService.updateState(id, request);
             } else {
-                log.warn("Order {} is NOT READY. Current state: {}. Why are you notify me?",
-                        id, order != null ? order.getState() : "null");
+                log.info("Order [{}] is not BREWED yet, state: {}", 
+                    id, order != null ? order.getState() : "null");
             }
-            log.info("=== 處理完成 ===");
         };
     }
 }
 ```
 
-#### CustomerController.java - 客戶控制器
+**Key Points:**
+
+| Component | Purpose |
+|-----------|---------|
+| `@Bean Consumer<Long>` | Function-based message consumer |
+| `@Value("${customer.name}")` | Customer name for logging |
+| Message filtering | Via RabbitMQ routing key mechanism |
+| State verification | Only process BREWED orders |
+
+### CustomerController (REST API)
+
 ```java
-/**
- * 客戶訂單控制器
- * 提供訂單建立和查詢的 REST API 端點
- */
 @RestController
 @RequestMapping("/customer")
 @Slf4j
 public class CustomerController {
-    
     @Autowired
     private CoffeeOrderService orderService;
     
@@ -272,173 +567,505 @@ public class CustomerController {
     private String customer;
 
     /**
-     * 建立新訂單
-     * 客戶下單後，訂單狀態會自動設為已付款（PAID）
-     * 並透過 Waiter Service 開始製作流程
-     * 
-     * @return CoffeeOrder 建立的訂單物件
+     * Create new order
+     * Order state automatically set to PAID after creation
+     * Processing starts via Waiter Service
      */
     @PostMapping("/order")
     @Bulkhead(name = "order", type = Bulkhead.Type.THREADPOOL)
     public CoffeeOrder createOrder() {
-        // 建立新訂單請求
+        // Create order request with dynamic customer name
         NewOrderRequest newOrder = NewOrderRequest.builder()
-                .customer(customer)  // 使用動態客戶名稱
+                .customer(customer)  // Use dynamic customer name: spring-8090
                 .items(Arrays.asList(
                         CoffeeOrderItemRequest.builder()
                                 .coffee("capuccino")
                                 .build()))
                 .build();
         
-        log.info("Create new order: {}", newOrder);
-        // 建立訂單並返回結果
+        log.info("Create order: {}", newOrder);
+        
+        // Create order via Feign (calls Waiter Service)
         CoffeeOrder order = orderService.createOrder(newOrder);
-        log.info("Created order: {}", order);
+        log.info("Order is PAID: {}", order);
+        
         return order;
     }
 }
 ```
 
-#### CoffeeOrderService.java - 訂單服務
-```java
-/**
- * 訂單服務介面實作
- * 負責訂單的 CRUD 操作和狀態管理
- */
-@Service
-@Slf4j
-public class CoffeeOrderService {
-    
-    @Autowired
-    private CoffeeOrderRepository orderRepository;
-    
-    @Autowired
-    private WaiterService waiterService;
+**Resilience4j Protection:**
+- `@Bulkhead(type = THREADPOOL)`: Isolate failure in separate thread pool
+- Prevents Waiter Service failure from blocking Customer Service
 
-    /**
-     * 建立新訂單
-     * 訂單建立後會自動設為已付款狀態，並通知 Waiter Service
-     * 
-     * @param newOrder 新訂單請求
-     * @return CoffeeOrder 建立的訂單物件
-     */
-    public CoffeeOrder createOrder(NewOrderRequest newOrder) {
-        // 計算訂單總金額
-        CoffeeOrder order = CoffeeOrder.builder()
-                .customer(newOrder.getCustomer())
-                .items(newOrder.getItems())
-                .state(OrderState.INIT)
-                .build();
-        
-        // 儲存訂單並設定為已付款狀態
-        orderRepository.save(order);
-        order.setState(OrderState.PAID);
-        orderRepository.save(order);
-        
-        // 通知 Waiter Service 處理訂單
-        waiterService.createOrder(order);
-        return order;
-    }
+## Resilience4j Configuration
 
-    /**
-     * 更新訂單狀態
-     * 使用熔斷器保護，防止 Waiter Service 不可用時影響本服務
-     * 
-     * @param id 訂單ID
-     * @param orderState 新的訂單狀態
-     * @return boolean 更新是否成功
-     */
-    public boolean updateState(Long id, OrderStateRequest orderState) {
-        // 使用熔斷器保護的遠端呼叫
-        return waiterService.updateOrderState(id, orderState);
-    }
-}
-```
+### Circuit Breaker
 
-## 監控與除錯
+**Configuration:**
 
-### 健康檢查端點
-- `/actuator/health` - 應用程式健康狀態
-- `/actuator/info` - 應用程式資訊
-- `/actuator/circuitbreakers` - 熔斷器狀態
-- `/actuator/metrics` - 應用程式指標
-
-### 日誌配置
 ```properties
-# 啟用 Spring Cloud Stream 除錯日誌
-logging.level.org.springframework.cloud.stream=DEBUG
-logging.level.tw.fengqing.spring.springbucks.customer=DEBUG
+# Circuit breaker configuration
+resilience4j.circuitbreaker.instances.order.failure-rate-threshold=50
+# Open circuit when failure rate exceeds 50%
+
+resilience4j.circuitbreaker.instances.order.wait-duration-in-open-state=5000
+# Wait 5 seconds before attempting half-open state
+
+resilience4j.circuitbreaker.instances.order.sliding-window-size=10
+# Use last 10 calls to calculate failure rate
 ```
 
-### 多實例測試
+**Test Circuit Breaker:**
+
 ```bash
-# 啟動多個實例進行消息路由測試
-# 終端1
-mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+# Stop waiter-service to trigger circuit breaker
+# Then try creating order
+curl -X POST http://localhost:8090/customer/order
 
-# 終端2
-mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
-
-# 分別向不同端口下單，驗證消息路由
-curl -X POST "http://localhost:8090/customer/order"
-curl -X POST "http://localhost:8091/customer/order"
-
-# 預期結果：
-# - 訂單1只會通知到 8090 實例
-# - 訂單2只會通知到 8091 實例
-# - 兩個實例互不干擾，實現精準路由
+# Expected: Circuit breaker will open after several failures
+# Subsequent requests will fail fast without calling waiter-service
 ```
 
-## 參考資源
+### Bulkhead
 
-- [Spring Cloud Stream 官方文件](https://spring.io/projects/spring-cloud-stream)
-- [Resilience4j 官方文件](https://resilience4j.readme.io/)
-- [RabbitMQ 路由機制說明](https://www.rabbitmq.com/tutorials/tutorial-four-spring-amqp.html)
+**Configuration:**
 
-## 注意事項與最佳實踐
+```properties
+# Bulkhead configuration
+resilience4j.bulkhead.instances.order.max-concurrent-calls=5
+# Maximum 5 concurrent calls
 
-### ⚠️ 重要提醒
+resilience4j.bulkhead.instances.order.max-wait-duration=1000
+# Wait maximum 1 second for available slot
+```
 
-| 項目 | 說明 | 建議做法 |
-|------|------|----------|
-| 消息路由 | 確保路由鍵唯一性 | 使用客戶名稱+端口號作為路由鍵 |
-| 服務依賴 | 避免強依賴 Waiter Service | 使用熔斷器保護遠端呼叫 |
-| 狀態管理 | 訂單狀態一致性 | 實作樂觀鎖機制 |
-| 多實例部署 | 避免消息重複處理 | 使用不同的 consumer group |
+**Test Bulkhead:**
 
-### 🔒 最佳實踐指南
+```bash
+# Send 10 concurrent requests
+for i in {1..10}; do
+  curl -X POST http://localhost:8090/customer/order &
+done
 
-- **消息設計**：使用明確的消息格式和客戶識別
-- **錯誤處理**：實作完整的異常處理和日誌記錄
-- **監控指標**：監控消息處理延遲和熔斷器狀態
-- **資源管理**：合理配置連線池和執行緒池
-- **安全性**：使用 TLS 加密消息傳輸
-- **測試策略**：使用多實例測試驗證消息路由機制
+# Expected: First 5 succeed, remaining 5 either wait or fail
+```
 
-### 常見問題排解
+## Monitoring
 
-1. **消息未收到**：檢查路由鍵配置和 consumer group 設定
-2. **重複處理**：確保每個實例使用不同的 consumer group
-3. **熔斷器開啟**：檢查 Waiter Service 是否正常運行
-4. **端口衝突**：使用 `server.port=0` 自動分配端口
+### View RabbitMQ Queue Status
 
-## 授權說明
+```bash
+# Query specific queue
+curl -u spring:spring http://localhost:15672/api/queues/%2F/notifyOrders.customer-service-8090 | jq '{name, messages, consumers}'
 
-本專案採用 MIT 授權條款，詳見 LICENSE 檔案。
+# Expected output:
+# {
+#   "name": "notifyOrders.customer-service-8090",
+#   "messages": 0,
+#   "consumers": 1
+# }
+```
 
-## 關於我們
+### View Consul Service Status
 
-我們主要專注在敏捷專案管理、物聯網（IoT）應用開發和領域驅動設計（DDD）。喜歡把先進技術和實務經驗結合，打造好用又靈活的軟體解決方案。
+```bash
+# Query customer-service instances
+curl -s http://localhost:8500/v1/catalog/service/customer-service | jq '.[] | {ID: .ServiceID, Port: .ServicePort, Health: .Checks[0].Status}'
 
-## 聯繫我們
+# Expected output:
+# {
+#   "ID": "customer-service-8090",
+#   "Port": 8090,
+#   "Health": "passing"
+# }
+# {
+#   "ID": "customer-service-8091",
+#   "Port": 8091,
+#   "Health": "passing"
+# }
+```
 
-- **FB 粉絲頁**：[風清雲談 | Facebook](https://www.facebook.com/profile.php?id=61576838896062)
-- **LinkedIn**：[linkedin.com/in/chu-kuo-lung](https://www.linkedin.com/in/chu-kuo-lung)
-- **YouTube 頻道**：[雲談風清 - YouTube](https://www.youtube.com/channel/UCXDqLTdCMiCJ1j8xGRfwEig)
-- **風清雲談 部落格**：[風清雲談](https://blog.fengqing.tw/)
-- **電子郵件**：[fengqing.tw@gmail.com](mailto:fengqing.tw@gmail.com)
+## Common Issues
+
+### Issue 1: Message Not Received
+
+**Symptom:**
+```
+Order created but no "Order is READY" log
+```
+
+**Solutions:**
+
+```bash
+# 1. Verify RabbitMQ queue exists with correct routing key
+curl -u spring:spring http://localhost:15672/api/queues/%2F/notifyOrders.customer-service-8090 | jq '.bindings'
+
+# Expected: binding-routing-key = "spring-8090"
+
+# 2. Check consumer group configuration
+# Each instance must use unique group name:
+spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service-${server.port}
+
+# 3. Verify routing key matches customer name
+# application.properties:
+customer.name=spring-${server.port}
+spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.binding-routing-key=${customer.name}
+```
+
+### Issue 2: Duplicate Message Processing
+
+**Symptom:**
+```
+Both 8090 and 8091 instances receive same message
+```
+
+**Root Cause:** Using same consumer group
+
+**Solutions:**
+
+```bash
+# ❌ Wrong: Same group name for all instances
+spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service
+
+# ✅ Correct: Unique group name per instance
+spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service-${server.port}
+```
+
+### Issue 3: Feign Client Connection Failed
+
+**Error:**
+```
+feign.RetryableException: Connection refused executing GET http://waiter-service/order/1
+```
+
+**Solutions:**
+
+```bash
+# 1. Verify waiter-service is registered in Consul
+curl -s http://localhost:8500/v1/catalog/service/waiter-service
+
+# 2. Check Feign client configuration
+# bootstrap.properties should have:
+spring.cloud.consul.discovery.enabled=true
+
+# 3. Test service discovery
+curl -s http://localhost:8500/v1/catalog/service/waiter-service | jq '.[] | {Port: .ServicePort}'
+```
+
+### Issue 4: Circuit Breaker Stays Open
+
+**Symptom:**
+```
+All requests fail even after waiter-service recovers
+```
+
+**Solutions:**
+
+```bash
+# 1. Check circuit breaker state
+curl http://localhost:8090/actuator/circuitbreakers | jq
+
+# 2. Wait for automatic recovery (wait-duration-in-open-state)
+# Default: 5 seconds
+
+# 3. Or restart customer-service
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+```
+
+## Best Practices
+
+### 1. Routing Key Configuration
+
+**✅ Recommended: Dynamic routing key**
+
+```properties
+# Use dynamic customer name based on port
+customer.name=spring-${server.port}
+spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.binding-routing-key=${customer.name}
+```
+
+**❌ Not Recommended: Hard-coded routing key**
+
+```properties
+# Hard-coded routing key (not scalable)
+spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.binding-routing-key=spring-8090
+```
+
+### 2. Consumer Group Configuration
+
+**✅ Recommended: Unique group per instance**
+
+```properties
+# Each instance has isolated queue
+spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service-${server.port}
+```
+
+**⚠️ Caution: Shared group for load balancing**
+
+```properties
+# All instances share same queue (load balancing mode)
+# Use this only when messages can be processed by any instance
+spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service
+```
+
+### 3. Resilience4j Configuration
+
+**Circuit Breaker:**
+```properties
+# ✅ Recommended: Reasonable failure threshold
+resilience4j.circuitbreaker.instances.order.failure-rate-threshold=50
+
+# ✅ Recommended: Appropriate wait duration
+resilience4j.circuitbreaker.instances.order.wait-duration-in-open-state=5000
+```
+
+**Bulkhead:**
+```properties
+# ✅ Recommended: Limit concurrent calls
+resilience4j.bulkhead.instances.order.max-concurrent-calls=5
+
+# ✅ Recommended: Short wait duration
+resilience4j.bulkhead.instances.order.max-wait-duration=1000
+```
+
+### 4. Message Durability
+
+**✅ Recommended: Enable durable subscription**
+
+```properties
+# Ensure messages not lost on consumer restart
+spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.durable-subscription=true
+```
+
+### 5. Error Handling
+
+**Add Retry Configuration:**
+
+```properties
+# Retry on message processing failure
+spring.cloud.stream.bindings.notifyOrders-in-0.consumer.max-attempts=3
+spring.cloud.stream.bindings.notifyOrders-in-0.consumer.back-off-initial-interval=1000
+spring.cloud.stream.bindings.notifyOrders-in-0.consumer.back-off-multiplier=2
+```
+
+**Add Dead Letter Queue:**
+
+```properties
+# Enable DLQ for failed messages
+spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.auto-bind-dlq=true
+spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.republish-to-dlq=true
+```
+
+## Architecture
+
+### System Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Customer Services                     │
+│  ┌────────────────────┐      ┌────────────────────┐     │
+│  │ Instance 8090      │      │ Instance 8091      │     │
+│  │ customer=spring-   │      │ customer=spring-   │     │
+│  │          8090      │      │          8091      │     │
+│  └──────────┬─────────┘      └──────────┬─────────┘     │
+└─────────────┼─────────────────────────────┼─────────────┘
+              │ Feign Client                │
+              │ (via Consul)                │
+              ▼                             ▼
+┌─────────────────────────────────────────────────────────┐
+│              Waiter Service (Port 65440)                 │
+│  - Receive order creation requests                      │
+│  - Send newOrders message to Barista                    │
+│  - Receive finishedOrders notification                  │
+│  - Send notifyOrders with routing key (customer name)   │
+└─────────────┬─────────────────────┬─────────────────────┘
+              │                     │
+              ▼                     ▼
+     ┌────────────────┐    ┌────────────────┐
+     │ RabbitMQ       │    │ Barista Service│
+     │ - newOrders    │    │ - Process      │
+     │ - finishedOrders│   │   orders       │
+     │ - notifyOrders │    │ - Send         │
+     │   (routing key)│    │   completion   │
+     └────────────────┘    └────────────────┘
+```
+
+### Message Routing Flow
+
+```
+Customer (8090)
+   │ POST /customer/order
+   ▼
+Waiter Service
+   │ updateState(PAID)
+   ├──> newOrders Exchange
+   │       │
+   │       ▼
+   │   Barista Service
+   │       │ Process coffee (5s)
+   │       │ updateState(BREWED)
+   │       ▼
+   │   finishedOrders Exchange
+   │       │
+   │       ▼
+   │   Waiter Service
+   │       │ finishedOrders Consumer
+   │       │
+   │       ├──> notifyOrders Exchange
+   │            │ (routing-key: spring-8090)
+   │            ▼
+   │        RabbitMQ Routing
+   │            │
+   │            ├──> Queue: notifyOrders.customer-service-8090
+   │            │         ↓
+   │            │     Customer (8090) ✅ Receives
+   │            │
+   │            └──> Queue: notifyOrders.customer-service-8091
+   │                      ↓
+   │                  Customer (8091) ⛔ Does NOT receive
+   ▼
+Order state: TAKEN
+Workflow complete
+```
+
+## Testing
+
+### Manual Testing
+
+**Test Single Instance:**
+
+```bash
+# Start single instance
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+
+# Create order
+curl -X POST http://localhost:8090/customer/order | jq
+
+# Expected flow:
+# 1. Order created with state INIT
+# 2. Order updated to PAID
+# 3. Wait ~5 seconds (Barista processing)
+# 4. Receive notification: "Order is READY, I'll take it."
+# 5. Order state updated to TAKEN
+```
+
+**Test Multi-Instance Routing:**
+
+```bash
+# Terminal 1: Start instance 8090
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+
+# Terminal 2: Start instance 8091
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
+
+# Terminal 3: Create order on 8090
+curl -X POST http://localhost:8090/customer/order
+
+# Expected:
+# - Instance 8090 log: "Order 1 is READY, I'll take it."
+# - Instance 8091 log: (no output for order 1)
+
+# Terminal 4: Create order on 8091
+curl -X POST http://localhost:8091/customer/order
+
+# Expected:
+# - Instance 8091 log: "Order 2 is READY, I'll take it."
+# - Instance 8090 log: (no output for order 2)
+```
+
+### Automated Testing
+
+```bash
+# Run unit tests
+./mvnw test
+
+# Run integration tests
+./mvnw verify
+```
+
+## Best Practices Demonstrated
+
+1. **Event-Driven Architecture**: Use messaging for asynchronous communication
+2. **Routing Key Precision**: Implement precise message delivery to specific instances
+3. **Function-Based Model**: Leverage Spring Cloud Stream 4.x function model
+4. **Resilience Pattern**: Circuit breaker and bulkhead for fault tolerance
+5. **Service Discovery**: Dynamic service location via Consul
+6. **Multi-Instance Support**: Horizontal scaling with message isolation
+7. **Dynamic Configuration**: Port-based customer naming for flexibility
+8. **Durable Messaging**: Persistent subscriptions to prevent message loss
+9. **Thread Separation**: Async message processing separate from HTTP handling
+10. **Monitoring Integration**: Comprehensive Actuator endpoints
+
+## Advanced Topics
+
+### 1. Custom Message Headers
+
+```java
+// In Waiter Service: Send message with custom headers
+Message<Long> message = MessageBuilder.withPayload(orderId)
+        .setHeader("customer", order.getCustomer())
+        .setHeader("priority", "high")
+        .build();
+streamBridge.send("notifyOrders-out-0", message);
+```
+
+### 2. Message Error Handling
+
+```java
+@Bean
+public Consumer<Long> notifyOrders() {
+    return id -> {
+        try {
+            // Process message
+            processOrder(id);
+        } catch (Exception e) {
+            log.error("Failed to process order {}", id, e);
+            // Message will be sent to DLQ if configured
+            throw e;
+        }
+    };
+}
+```
+
+### 3. Load Balancing Mode
+
+```properties
+# Use shared consumer group for load balancing
+# All instances share same queue, messages distributed round-robin
+spring.cloud.stream.bindings.notifyOrders-in-0.group=customer-service-shared
+
+# Remove routing key binding for broadcast
+# spring.cloud.stream.rabbit.bindings.notifyOrders-in-0.consumer.binding-routing-key=
+```
+
+## References
+
+- [Spring Cloud Stream Documentation](https://docs.spring.io/spring-cloud-stream/docs/current/reference/html/)
+- [Spring Cloud Stream Function Model](https://docs.spring.io/spring-cloud-stream/docs/current/reference/html/spring-cloud-stream.html#spring-cloud-stream-overview-using-spring-cloud-stream)
+- [RabbitMQ Routing Tutorial](https://www.rabbitmq.com/tutorials/tutorial-four-spring-amqp.html)
+- [Resilience4j Documentation](https://resilience4j.readme.io/)
+- [Spring Cloud OpenFeign](https://docs.spring.io/spring-cloud-openfeign/docs/current/reference/html/)
+- [Consul Service Discovery](https://www.consul.io/docs/discovery)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## About Us
+
+我們主要專注在敏捷專案管理、物聯網（IoT）應用開發和領域驅動設計（DDD）。喜歡把先進技術和實務經驗結合，打造好用又靈活的軟體解決方案。近來也積極結合 AI 技術，推動自動化工作流，讓開發與運維更有效率、更智慧。持續學習與分享，希望能一起推動軟體開發的創新和進步。
+
+## Contact
+
+**風清雲談** - 專注於敏捷專案管理、物聯網（IoT）應用開發和領域驅動設計（DDD）。
+
+- 🌐 官方網站：[風清雲談部落格](https://blog.fengqing.tw/)
+- 📘 Facebook：[風清雲談粉絲頁](https://www.facebook.com/profile.php?id=61576838896062)
+- 💼 LinkedIn：[Chu Kuo-Lung](https://www.linkedin.com/in/chu-kuo-lung)
+- 📺 YouTube：[雲談風清頻道](https://www.youtube.com/channel/UCXDqLTdCMiCJ1j8xGRfwEig)
+- 📧 Email：[fengqing.tw@gmail.com](mailto:fengqing.tw@gmail.com)
 
 ---
 
-**📅 最後更新：2025-10-21**  
-**👨‍💻 維護者：風清雲談團隊**
+**⭐ If this project helps you, please give it a Star!**
