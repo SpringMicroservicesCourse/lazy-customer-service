@@ -11,9 +11,7 @@ import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.bulkhead.BulkheadFullException;
 import io.github.resilience4j.bulkhead.BulkheadRegistry;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-// 暫時移除 CircuitBreakerOpenException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-// 移除 Vavr 依賴，使用 Java 8+ 原生方式
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

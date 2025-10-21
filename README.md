@@ -113,8 +113,15 @@ mvn clean compile
 mvn spring-boot:run
 
 # 多實例執行（用於測試消息路由）
-java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8090
-java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8091
+# 終端1：啟動客戶端1（端口8090）
+mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+
+# 終端2：啟動客戶端2（端口8091）
+mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
+
+# 或使用 JAR 方式執行
+# java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8090
+# java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8091
 ```
 
 ## 進階說明
@@ -366,12 +373,20 @@ logging.level.tw.fengqing.spring.springbucks.customer=DEBUG
 ### 多實例測試
 ```bash
 # 啟動多個實例進行消息路由測試
-java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8090 &
-java -jar target/lazy-customer-service-0.0.1-SNAPSHOT.jar --server.port=8091 &
+# 終端1
+mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8090"
+
+# 終端2
+mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8091"
 
 # 分別向不同端口下單，驗證消息路由
 curl -X POST "http://localhost:8090/customer/order"
 curl -X POST "http://localhost:8091/customer/order"
+
+# 預期結果：
+# - 訂單1只會通知到 8090 實例
+# - 訂單2只會通知到 8091 實例
+# - 兩個實例互不干擾，實現精準路由
 ```
 
 ## 參考資源
@@ -425,5 +440,5 @@ curl -X POST "http://localhost:8091/customer/order"
 
 ---
 
-**📅 最後更新：2024-09-17**  
+**📅 最後更新：2025-10-21**  
 **👨‍💻 維護者：風清雲談團隊**
